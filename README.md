@@ -146,6 +146,8 @@ Visualize some samples:
 ```python
 visualize_predictions(model, X_test, y_test)
 ```
+![Alt text](evaluate.png)
+
 
 # Plot the training and validation accuracy and loss
 ```python
@@ -175,4 +177,5 @@ def plot_training_history(history):
 # Call the function to plot training history
 plot_training_history(history)
 ```
+![Alt text](evaluate.png)
 
