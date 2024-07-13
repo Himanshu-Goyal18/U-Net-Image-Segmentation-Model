@@ -179,5 +179,5 @@ def plot_training_history(history):
 # Call the function to plot training history
 plot_training_history(history)
 ```
-![Alt text](Model accuracy.png)
+![Alt text](Model_accuracy.png)
 
