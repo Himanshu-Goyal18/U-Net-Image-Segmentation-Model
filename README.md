@@ -1,5 +1,14 @@
 # UNet Image Segmentation Model
-## Import necessary libraries:
+## Overview
+This project features a U-Net model for human segmentation using the "Supervisely Person Dataset" available on Kaggle. The model effectively segments human figures from images by learning intricate features through multiple layers of neural networks.
+
+Purpose or Motivation:
+To explore deep learning for image segmentation, specifically isolating human figures from images. Potential applications include video editing, augmented reality, and autonomous driving.
+
+Dataset Used:
+Trained on the "Supervisely Person Dataset" from Kaggle, which contains high-quality images and corresponding binary masks for human segmentation.
+## Inference
+### Import necessary libraries:
 ```python 
 # Importing necessary libraries
 import os
@@ -16,7 +25,7 @@ from tensorflow.keras.callbacks import EarlyStopping
 ```
 
 
-## Data Preparation
+### Data Preparation
 
 The data consists of images and corresponding masks stored in separate directories. The function 'load_data' is used to load and preprocess the images and masks:
 
@@ -52,7 +61,7 @@ image_size = (128, 128, 3)
 images, masks = load_data(image_dir, mask_dir, image_size[:2])
 ```
 
-## Model Architecture
+### Model Architecture
 
 The U-Net model is defined as follows:
 
@@ -107,18 +116,69 @@ def unet_model(input_size=(128, 128, 3)):
     model = Model(inputs, outputs)
     return model
 ```
-## Training
+
+
+Initialize and compile the model:
+```python
+try:
+    model = unet_model()
+    optimizer = Adam(learning_rate=1e-5, clipvalue=1.0)
+    model.compile(optimizer=optimizer, loss='binary_crossentropy', metrics=['accuracy'])
+    print("Model compiled successfully.")
+except Exception as e:
+    print(f"Error compiling model: {e}")
+```
+Split data into training and testing sets:
+```python
+try:
+    X_train, X_test, y_train, y_test = train_test_split(images, masks, test_size=0.2, random_state=42)
+    print("Data split into training and testing sets successfully.")
+except Exception as e:
+    print(f"Error splitting data: {e}")
+```
+Define data augmentation:
+```python
+data_gen_args = dict(rotation_range=10.,
+                     width_shift_range=0.1,
+                     height_shift_range=0.1,
+                     shear_range=0.2,
+                     zoom_range=0.2,
+                     horizontal_flip=True,
+                     fill_mode='nearest')
+image_datagen = ImageDataGenerator(**data_gen_args)
+mask_datagen = ImageDataGenerator(**data_gen_args)
+
+seed = 42
+try:
+    image_datagen.fit(X_train, augment=True, seed=seed)
+    mask_datagen.fit(y_train, augment=True, seed=seed)
+    
+    image_generator = image_datagen.flow(X_train, batch_size=32, seed=seed)
+    mask_generator = mask_datagen.flow(y_train, batch_size=32, seed=seed)
+    
+    train_generator = tf.data.Dataset.zip((tf.data.Dataset.from_generator(lambda: image_generator, output_signature=tf.TensorSpec(shape=(None, 128, 128, 3), dtype=tf.float32)),
+                                           tf.data.Dataset.from_generator(lambda: mask_generator, output_signature=tf.TensorSpec(shape=(None, 128, 128, 1), dtype=tf.float32))))
+    print("Data augmentation defined successfully.")
+except Exception as e:
+    print(f"Error defining data augmentation: {e}")
+```
+Early stopping:
+```python
+early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
+print("Early stopping defined successfully.")
+```
+### Training
 
 Compile and train the model:
 
 ```python
-model = unet_model()
-optimizer = Adam(learning_rate=1e-5, clipvalue=1.0)
-model.compile(optimizer=optimizer, loss='binary_crossentropy', metrics=['accuracy'])
 
-X_train, X_test, y_train, y_test = train_test_split(images, masks, test_size=0.2, random_state=42)
-
-history = model.fit(X_train, y_train, batch_size=32, epochs=50, validation_data=(X_test, y_test))
+try:
+    history = model.fit(train_generator, epochs=100, steps_per_epoch=len(X_train) // 32, 
+                        validation_data=(X_test, y_test), callbacks=[early_stopping])
+    print("Model trained successfully.")
+except Exception as e:
+    print(f"Error training model: {e}")
 
 ```
 ## Evaluation
@@ -133,9 +193,15 @@ print(f"Test Accuracy: {accuracy}")
 Model evaluation - Loss: 0.5444254279136658, Accuracy: 0.7460329532623291
 
 
-## Visualization
-Visualize the results on the test set:
+### Visualization
 
+Visualize some samples:
+```python
+visualize_predictions(model, X_test, y_test)
+```
+![Alt text](Samples.png)
+
+Visualize the results on the test set:
 
 
 ```python
@@ -159,16 +225,11 @@ def visualize_predictions(model, X_test, y_test, num_samples=3):
         plt.axis('off')
 
 ```
-![Alt text](evaluation.png)
-
-Visualize some samples:
-```python
-visualize_predictions(model, X_test, y_test)
-```
-![Alt text](Samples.png)
+![Alt text](Evaluation.png)
 
 
-# Plot the training and validation accuracy and loss
+
+### Plot the training and validation accuracy and loss:
 ```python
 def plot_training_history(history):
     epochs = range(1, len(history.history['accuracy']) + 1)
@@ -197,4 +258,28 @@ def plot_training_history(history):
 plot_training_history(history)
 ```
 ![Alt text](Model_accuracy.png)
+## Citation
+Research paper used:
+```
+  author = {Ronneberger, Olaf and Fischer, Philipp and Brox, Thomas},
+  title = {U-Net: Convolutional Networks for Biomedical Image Segmentation},
+  journal = {Medical Image Computing and Computer-Assisted Intervention (MICCAI)},
+  volume = {9351},
+  pages = {234--241},
+  year = {2015},
+  publisher = {Springer},
+  doi = {10.1007/978-3-319-24574-4_28},
+
+```
+Dataset used:
+```python
+
+  author = {Supervisely},
+  title = {Supervisely Person Dataset},
+  year = {2024},
+  howpublished = {\url{https://www.kaggle.com/datasetlink}},
+  dataset = {Supervisely Person Dataset, Kaggle},
+
+
+```
 
