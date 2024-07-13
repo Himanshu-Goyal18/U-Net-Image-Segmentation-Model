@@ -115,6 +115,8 @@ loss, accuracy = model.evaluate(X_test, y_test)
 print(f"Test Loss: {loss}")
 print(f"Test Accuracy: {accuracy}")
 ```
+Model evaluation - Loss: 0.5444254279136658, Accuracy: 0.7460329532623291
+
 
 ## Visualization
 Visualize the results on the test set:
