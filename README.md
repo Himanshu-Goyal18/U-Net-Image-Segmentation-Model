@@ -1,4 +1,19 @@
 # UNet Image Segmentation Model
+## Import necessary libraries:
+```python 
+# Importing necessary libraries
+import os
+import numpy as np
+import tensorflow as tf
+from tensorflow.keras.preprocessing.image import load_img, img_to_array, ImageDataGenerator
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from tensorflow.keras.layers import Input, Conv2D, MaxPooling2D, Conv2DTranspose, concatenate, Dropout
+from tensorflow.keras.models import Model
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.callbacks import EarlyStopping
+
+```
 
 
 ## Data Preparation
@@ -144,6 +159,8 @@ def visualize_predictions(model, X_test, y_test, num_samples=3):
         plt.axis('off')
 
 ```
+![Alt text](evaluation.png)
+
 Visualize some samples:
 ```python
 visualize_predictions(model, X_test, y_test)
